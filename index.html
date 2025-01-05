@@ -16,6 +16,31 @@
         const ctx = canvas.getContext('2d');
         let wasmInstance = null;
 
+        // Define button properties
+        const buttons = [
+            // Number Buttons (1-9)
+            { x: 20, y: 100, width: 60, height: 60, key: '1' },
+            { x: 90, y: 100, width: 60, height: 60, key: '2' },
+            { x: 160, y: 100, width: 60, height: 60, key: '3' },
+            { x: 20, y: 170, width: 60, height: 60, key: '4' },
+            { x: 90, y: 170, width: 60, height: 60, key: '5' },
+            { x: 160, y: 170, width: 60, height: 60, key: '6' },
+            { x: 20, y: 240, width: 60, height: 60, key: '7' },
+            { x: 90, y: 240, width: 60, height: 60, key: '8' },
+            { x: 160, y: 240, width: 60, height: 60, key: '9' },
+            // Zero Button
+            { x: 90, y: 310, width: 60, height: 60, key: '0' },
+            // Clear Button
+            { x: 20, y: 310, width: 60, height: 60, key: 'c' },
+            // Equals Button
+            { x: 230, y: 310, width: 60, height: 60, key: '=' },
+            // Operation Buttons
+            { x: 230, y: 100, width: 60, height: 60, key: '+' },
+            { x: 230, y: 170, width: 60, height: 60, key: '-' },
+            { x: 230, y: 240, width: 60, height: 60, key: '*' },
+            { x: 230, y: 310, width: 60, height: 60, key: '/' },
+        ];
+
         // Functions that Zig will call
         const wasmEnv = {
             clearScreen: () => {
@@ -43,21 +68,41 @@
             wasmInstance.exports.init();
         }
 
-        // Handle keyboard and mouse input
+        // Handle keyboard input
         document.addEventListener('keydown', (event) => {
             if (wasmInstance) {
                 wasmInstance.exports.handleKeyPress(event.key.charCodeAt(0));
             }
         });
 
+        // Handle mouse clicks with visual feedback
         canvas.addEventListener('click', (event) => {
+            if (!wasmInstance) return;
+
             const rect = canvas.getBoundingClientRect();
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
-            // TODO: Add click handling in Zig
+
+            // Find which button was clicked
+            for (const button of buttons) {
+                if (x >= button.x && x <= button.x + button.width &&
+                    y >= button.y && y <= button.y + button.height) {
+                    // Provide visual feedback by highlighting the button
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                    ctx.fillRect(button.x, button.y, button.width, button.height);
+                    setTimeout(() => {
+                        wasmInstance.exports.draw();
+                    }, 100); // Remove highlight after 100ms
+
+                    // Simulate a key press
+                    wasmInstance.exports.handleKeyPress(button.key.charCodeAt(0));
+                    break;
+                }
+            }
         });
 
         init();
     </script>
 </body>
 </html>
+
